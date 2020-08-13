@@ -4,15 +4,17 @@
 ## Modified: 8/13/2020
 
 ## This is a script meant to turn CSVs output from Dot's GEE scripts
-## into longform compatible with analysis
+## into longform compatible with analysis. 
 
 # To move forward thru the script, press Ctrl+Enter- HOWEVER, read notes carefully,
 # as you will need to change certain things as directed
 
 # This is built for NDVI, NBR, and NLCD scripts. It should work for any CSV
-# produced by Dorothy' LANDSAT 7 Band calculator script. I encourage the reader
-# to edit as they see fit to make this script more robust to other kinds of
-# GEE (or otherwise) CSV output
+# produced by a direvative of Dorothy' LANDSAT 7 Band calculator script. I encourage 
+# the reader to edit as they see fit to make this script more robust to
+#  other kinds of GEE (or otherwise) CSV output
+
+#### START ####
 
 # Set working directory- this will be specific to your own local clone
 # of the repository. 
@@ -31,7 +33,7 @@ NLCD.raw <- read.csv("LULC/NLCD/catchment_results2 - catchment_results.csv")
 NDVI.raw <- read.csv("NDVI/draft_ndvi_results3 - draft_ndvi_results3.csv")
 NBR.raw <- read.csv("NBR/draft_nbr_results.csv")
 
-#### Formatter Function ####
+### Formatter Function Description ###
 
 # x = desired dataframe
 # y = quantitative variable abbreviation, 
@@ -91,38 +93,43 @@ satForm <- function(x,y){
       Stat = gsub(".*_(.*)\\_.*", "\\1", VAR.long$variable)
     )
   
-  
+  ## Check if NLCD script- extract year from var name,
   if("raw.forest.area.2016" %in% VAR.long$variable){
       VAR.long$Year <- substrRight(VAR.long$Year,4)
       
+      ## and extract land cover type from var name
       VAR.long <-  mutate(VAR.long,
                           Stat = gsub("(?:[^.]+\\.){1}([^.]+).*", "\\1", VAR.long$variable)
       )} else {
+        # If not NLCD script, continue on as normal
         VAR.long
       }
   
     VAR.fin <- VAR.long %>%
                         # then remove variable column and the redundant "0" Years values
                         subset(Year > 0, select= c("Site","Year","Stat","value"))
-
+  # If NBR or NDVI script, turn 1-20 into corresponding years
    if("mean" %in% VAR.fin$Stat){
      for (i in 1:length(VAR.fin$Year)){
+       # For 1-9, paste '200' in front
        if(VAR.fin$Year[i] %in% c(1,2,3,4,5,6,7,8,9)){
          VAR.fin$Year[i] <- paste0("200",VAR.fin$Year[i])
-         # print("DOODLES")
        }else{
+       # otherwise (10-20), paste 20 in front
          VAR.fin$Year[i] <- paste0('20',VAR.fin$Year[i])
        }
      }
   
    } else {
+    # If not, leave as is 
      VAR.fin
    }
-  
+# Return our new dataframe
+# with the Stat/Type, Year, Site, and Value for NDVI, NBR, NLCD (or, any band type)    
   VAR.fin
-  
 } 
 
+# Run the function- examples below- replace with your own code
 NLCD <- satForm(NLCD.raw,"area")
 NDVI <- satForm(NDVI.raw,"^NDVI")
 NBR <- satForm(NBR.raw,"^NBR")
