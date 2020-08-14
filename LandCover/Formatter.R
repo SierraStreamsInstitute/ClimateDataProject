@@ -154,3 +154,16 @@ meanFun <- function(x){
   subset(x,Stat=='mean')[,-3] 
 }
 
+NDVI.max <- maxFun(NDVI)
+NDVI.min <- minFun(NDVI)
+NDVI.mean <- meanFun(NDVI)
+
+# Write out the CSVs you want
+
+write.csv(NDVI.max,"NDVImax.csv")
+write.csv(NDVI.mean,"NDVImean.csv")
+write.csv(NDVI.min,"NDVImin.csv")
+
+write.csv(NDVI,"NDVIgee.csv")
+write.csv(NBR,"NBRgee.csv")
+write.csv(NLCD,"NLCDgee.csv")
