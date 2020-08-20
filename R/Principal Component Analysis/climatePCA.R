@@ -23,3 +23,14 @@ setwd("C:/Users/Wes/Documents/SSI/Climate Data Project/FINALRUN")
 
 WQ.CL.BMI.raw <- read.csv("AllVars.csv")[,-1] %>% 
                     subset(WY < 2017)
+
+#Clean data to remove outliers.
+#Outliers here deteremined after internal discussion of "plausible"
+#versus "impossible" outliers. 
+
+#For now, primary outliers/changes are DO values >14, and 
+#changing one high conductivity value that had a misplaced decimal
+WQ.CL.BMI.raw <- WQ.CL.BMI.raw[WQ.CL.BMI.raw$O2 < 14,]
+WQ.CL.BMI.raw[WQ.CL.BMI.raw$Cond > 859, colnum] <- 86.6 #Note: change colnum to your Cond column.
+#Alternatively, just manually change the value of 860.667 to 86.67
+
