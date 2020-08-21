@@ -1,7 +1,7 @@
-####Climate Change impacts on Deer Creeek BMI communities and Water Quality
+####Climate Change impacts on Deer Creeek BMI communities and Water Quality####
 ###Authors: Jeff Lauder
 ###Date: 06/03/2020
-###Edited: 08/06/2020
+###Edited: 08/06/2020 See Log
 
 ####Log####
 #Things to add (08/06/2020):
@@ -14,6 +14,8 @@
 #Ha4: change in BMI driven by climate -> WQ: same as Ha2 + BMI
 #Ha5: collective model (land use + climate -> WQ -> BMI)
 #Run each, sort by fit, then run predictions and compare to raw WQ (and eventually BMI) data
+
+
 
 ###########################################################################
 ####Load packages####
@@ -30,17 +32,34 @@ library(semPlot)
 library(data.table)
 
 ####Load in data####
-setwd("~")
-AllVars <- read.csv("AllVars_i_full.csv")
+setwd("C:/Users/Nibbler/Box/Jeff Working Docs/SSI/CCeffects/Git/ClimateDataProject/")
+AllVars <- read.csv("R/SEMs/AllVars_i_full.csv")
+
+#Merge with land cover data update
+lulc <- read.csv("C:/Users/Nibbler/Box/Jeff Working Docs/SSI/CCeffects/LULC.csv")
+
+#Change lulc gridcode to "Site"
+colnames(lulc)[5] <- "Site"
+
+#Merge
+AllVars <- merge(AllVars, lulc, by = "Site")
 
 ####View Data####
 View(AllVars)
 
+#Calculate change in each LC type
+AllVars$ForestChange <- AllVars[,31] - AllVars[,29]
+AllVars$ScrubChange <- AllVars[,35]- AllVars[,34]
+AllVars$UrbanChange <- AllVars[,37] - AllVars[,36]
+
 #Check missingness
-nrow(AllVars) #3369
-nrow(AllVars[complete.cases(AllVars),]) #196
+nrow(AllVars) #3325
+nrow(AllVars[complete.cases(AllVars),]) #2799
 
 AllVars2 <- na.omit(AllVars)
+
+#Remove outliers (impossible values)
+AllVars2 <- AllVars2[AllVars2$O2 < 14,] #Final dataset 2693 observations
 
 ###########################################################################
 ####Build SEMs####
@@ -73,23 +92,23 @@ AllVars <- cbind(AllVars, AllVarslag)
 
 #Create lagged values based on column names/numbers
 for(i in 1:nrow(AllVars)){
-  for(j in 23:36){
-    AllVars[i+1,j] = AllVars[i,j-18]
+  for(j in 43:56){
+    AllVars[i+1,j] = AllVars[i,j-38]
   }
 }
 
 for(i in 1:nrow(AllVars)){
-  AllVars[i+1,37] = AllVars[i,21]
+  AllVars[i+1,57] = AllVars[i,21]
 }
 
 for(i in 1:nrow(AllVars)){
-  for(j in 38:51){
-    AllVars[i+2,j] = mean(AllVars[c(i,i+1,i+2),j-33])
+  for(j in 58:71){
+    AllVars[i+2,j] = mean(AllVars[c(i,i+1,i+2),j-53])
   }
 }
 
 #Load in BMI
-macro <- read.csv("bmicounts.csv")
+macro <- read.csv("R/SEMs/bmicounts.csv")
 AllVarsM <- merge(AllVars, macro, by = c("Site","WY","Month"))
 
 #Model 1: Complete model. All direct and indirect paths. No lag effects
@@ -336,15 +355,15 @@ semPaths(fit6, what="std",layout = ly, residuals=FALSE, nCharNodes=0,
 
 ####Predictions####
 #Predictions template. Edit 08/07/2020
-# fit <- sem(YOUR MODEL AND DATA)
-# 
-# i <- INDEX OF PREDICTED VARIABLE
-# j <- INDICES OF PREDICTOR VARIABLES
-# 
-# cv <- fitted(fit)$cov
-# coef <- solve(cv[j,j],cv[j,i])
-# 
-# predictions <- YOUR_DATA[,j]%*% coef
+ fit <- sem(YOUR MODEL AND DATA)
+ 
+ i <- INDEX OF PREDICTED VARIABLE
+ j <- INDICES OF PREDICTOR VARIABLES
+ 
+ cv <- fitted(fit)$cov
+ coef <- solve(cv[j,j],cv[j,i])
+ 
+ predictions <- YOUR_DATA[,j]%*% coef
 
 ####Bayesian network analysis here####
 #In progress in collaboration with Dan Wang of California Department of Pesticide Regulation
